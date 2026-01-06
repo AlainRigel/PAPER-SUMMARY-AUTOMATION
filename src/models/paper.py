@@ -76,7 +76,7 @@ class Paper(BaseModel):
     # Processing metadata
     source_file: Optional[str] = Field(None, description="Path to source PDF")
     ingestion_timestamp: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.utcnow(),
         description="When this paper was ingested"
     )
     parser_version: str = Field(default="0.1.0", description="Version of parser used")
