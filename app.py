@@ -90,6 +90,56 @@ async def upload_pdf(file: UploadFile = File(...)):
             temp_file.unlink()
 
 
+
+@app.post("/api/analyze")
+async def analyze_paper(file: UploadFile = File(...)):
+    """
+    Upload, parse, and perform academic analysis on a PDF file.
+    
+    Returns both the parsed Paper object and deep Academic Analysis.
+    """
+    from src.analysis import AcademicAnalyzer
+    
+    # Validate file type
+    if not file.filename.endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    # Save uploaded file temporarily
+    temp_file = UPLOAD_DIR / file.filename
+    
+    try:
+        # Save the uploaded file
+        with temp_file.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Parse the PDF
+        parser = SimplePDFParser()
+        paper = parser.parse(temp_file)
+        
+        # Perform academic analysis
+        analyzer = AcademicAnalyzer()
+        analysis = analyzer.analyze(paper)
+        
+        # Convert to dicts for JSON response
+        paper_dict = paper.model_dump(mode='json')
+        analysis_dict = analysis.model_dump(mode='json')
+        
+        return JSONResponse(content={
+            "success": True,
+            "paper": paper_dict,
+            "analysis": analysis_dict,
+            "filename": file.filename
+        })
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing PDF: {str(e)}")
+    
+    finally:
+        # Clean up temporary file
+        if temp_file.exists():
+            temp_file.unlink()
+
+
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint."""

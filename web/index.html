@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paper Collector - Academic Research Amplifier</title>
     <meta name="description" content="AI-powered platform for academic research and literature analysis">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/web/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <!-- Header -->
     <header class="header">
@@ -17,7 +19,9 @@
             <div class="header-content">
                 <div class="logo">
                     <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                     <h1>Paper Collector</h1>
                 </div>
@@ -34,14 +38,16 @@
                 <div class="upload-card">
                     <div class="upload-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                     </div>
                     <h2>Upload Academic Paper</h2>
                     <p class="upload-description">
                         Upload a PDF to extract structured information, metadata, and sections
                     </p>
-                    
+
                     <div class="upload-zone" id="uploadZone">
                         <input type="file" id="fileInput" accept=".pdf" hidden>
                         <label for="fileInput" class="upload-label">
@@ -53,7 +59,9 @@
                     <div class="selected-file" id="selectedFile" style="display: none;">
                         <div class="file-info">
                             <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             <div class="file-details">
                                 <p class="file-name" id="fileName"></p>
@@ -62,14 +70,16 @@
                         </div>
                         <button class="btn-remove" id="removeFile">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </svg>
                         </button>
                     </div>
 
                     <button class="btn-primary" id="analyzeBtn" disabled>
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                         Analyze Paper
                     </button>
@@ -92,13 +102,15 @@
                     <div class="results-actions">
                         <button class="btn-secondary" id="exportJson">
                             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             Export JSON
                         </button>
                         <button class="btn-secondary" id="newAnalysis">
                             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </svg>
                             New Analysis
                         </button>
@@ -119,7 +131,9 @@
                     <div class="paper-section" id="abstractSection">
                         <h4 class="section-title">
                             <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             Abstract
                         </h4>
@@ -150,7 +164,9 @@
                     <div class="sections-breakdown">
                         <h4 class="section-title">
                             <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             Sections Breakdown
                         </h4>
@@ -168,6 +184,7 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="/web/script.js"></script>
 </body>
+
 </html>
