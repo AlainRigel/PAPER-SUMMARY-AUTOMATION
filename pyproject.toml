@@ -1,0 +1,55 @@
+[tool.poetry]
+name = "paper-collector"
+version = "0.1.0"
+description = "Academic Research Cognitive Amplifier - AI-powered platform for scientific literature analysis"
+authors = ["Research Team"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.5.0"
+pydantic-settings = "^2.1.0"
+pypdf = "^3.17.0"
+typer = "^0.9.0"
+rich = "^13.7.0"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+black = "^23.12.0"
+ruff = "^0.1.8"
+mypy = "^1.7.0"
+
+[tool.poetry.group.ai.dependencies]
+# AI/ML dependencies for future phases
+sentence-transformers = "^2.2.0"
+qdrant-client = "^1.7.0"
+langchain = "^0.1.0"
+openai = "^1.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=src --cov-report=term-missing"
