@@ -1,146 +1,83 @@
-# Project Development Summary
+# 📋 Project Development Summary
 
-## MVP Completion Status: ✅ COMPLETE
+**Project Name:** Paper Collector - Academic Research Cognitive Amplifier
+**Version:** 0.3.0 (Groq LLM Integration)
+**Status:** Active Development (Phase 3 Complete)
 
-### Date: 2026-01-06
+## 🎯 Alcance de la Versión Actual (v0.3.0)
 
-## Implemented Components
+Esta versión representa el **MVP Funcional con Inteligencia Artificial**.
 
-### 1. Core Infrastructure ✅
-- [x] Poetry configuration with all dependencies
-- [x] Project structure (src/, tests/, examples/, data/)
-- [x] Git repository with atomic commits
-- [x] .gitignore for Python/Data Science projects
-- [x] Environment configuration template
+### ✅ Capacidades Incluidas
+*   **Ingesta de PDFs**: Carga de archivos PDF individuales.
+*   **Análisis Inteligente (Groq LLM)**:
+    *   Generación de resúmenes técnicos estructurados.
+    *   Extracción de "Contribuciones Principales" verificables.
+    *   Identificación de limitaciones y metodología.
+    *   Definición contextual de conceptos clave.
+*   **Detección de Secciones**: Parser optimizado con soporte multidisclipinario (Ingeniería, Medicina, Ciencias Sociales).
+*   **Interfaz Web**: Aplicación FastAPI + HTML/JS para visualización de resultados.
+*   **API REST**: Endpoints documentados para análisis (`/api/analyze`).
+*   **Infraestructura IA**: Integración con **Llama 3.3 70B** vía Groq (ultra-rápido).
 
-### 2. Data Models ✅
-- [x] `Paper` model with comprehensive metadata
-- [x] `Section` model with type classification
-- [x] `Author` model with affiliations
-- [x] `SectionType` enum for academic sections
-- [x] Full Pydantic validation and JSON serialization
+### 🚧 Limitaciones Conocidas (Fuera de Alcance v0.3.0)
+*   **Persistencia**: Los análisis no se guardan en base de datos (se pierden al cerrar/reiniciar).
+*   **RAG/Chat**: No hay interfaz de chat ni búsqueda semántica sobre el documento todavía.
+*   **Gestión Masiva**: La interfaz web solo acepta un archivo a la vez.
+*   **OCR**: PDFs escaneados (imágenes) no son procesados (requiere texto seleccionable).
+*   **Figuras/Tablas**: No se extrae el contenido visual de gráficos o tablas.
 
-### 3. PDF Ingestion Pipeline ✅
-- [x] Abstract parser interface (`AbstractParser`)
+---
+
+## 📅 Roadmap & Progress
+
+### Phase 1: Core Infrastructure ✅
+- [x] Project structure & Poetry config
+- [x] Data models (Paper, Section, Author)
 - [x] SimplePDFParser implementation
-- [x] Section detection using regex patterns
-- [x] Metadata extraction (title, authors)
-- [x] Error handling and validation
+- [x] CLI Interface
 
-### 4. CLI Interface ✅
-- [x] Typer-based command-line interface
-- [x] Rich formatting for beautiful output
-- [x] `ingest` command with options
-- [x] `version` command
-- [x] Verbose mode for detailed information
-- [x] JSON export functionality
+### Phase 2: NLP Foundation ✅
+- [x] Web Interface (FastAPI + JS)
+- [x] Basic NLP pipeline (spaCy)
+- [x] Section detection improvements
 
-### 5. Testing Suite ✅
-- [x] Unit tests for data models
-- [x] Unit tests for parsers
-- [x] Mocking for external dependencies
-- [x] Pytest configuration
-- [x] Test coverage setup
+### Phase 3: Intelligent Analysis (Current) ✅
+- [x] **LLM Integration**: Framework for LLM analysis.
+- [x] **Provider Switch**: Migrated from DeepSeek/OpenAI to **Groq**.
+- [x] **Model Upgrade**: Using **Llama 3.3 70B**.
+- [x] **Parser Optimization**: Enhanced Regex for multiple disciplines.
 
-### 6. Documentation ✅
-- [x] Comprehensive README with architecture diagrams
-- [x] Design specification document
-- [x] Contributing guidelines
-- [x] Example scripts
-- [x] Inline code documentation
+### Phase 4: Knowledge Base (Next) ⏳
+- [ ] Qdrant Vector Database integration
+- [ ] Semantic Embeddings (SPECTER2)
+- [ ] Analysis persistence
+- [ ] Semantic Search
 
-### 7. Development Tools ✅
-- [x] Makefile for common tasks
-- [x] GitHub Actions CI/CD pipeline
-- [x] Code formatting (Black)
-- [x] Linting (Ruff)
-- [x] Type checking (mypy)
+---
 
-## Git Commit History
+## 🛠️ Architecture Highlights (v0.3.0)
 
-All commits follow Conventional Commits specification:
+### Hybrid Analysis Engine
+1.  **Parser (PyPDF)**: Extracts raw text and structure.
+2.  **LLM (Groq)**: "Reads" the content to extract semantic meaning (contributions, limitations).
+3.  **Fallback (NLP)**: If LLM fails, falls back to Regex/Heuristics.
 
-1. `chore: initialize project structure with Poetry configuration`
-2. `feat: add Pydantic data models for Paper, Section, and Author`
-3. `feat: implement PDF ingestion module with SimplePDFParser`
-4. `feat: add CLI interface with Typer and Rich for paper ingestion`
-5. `test: add comprehensive unit tests for models and parsers`
-6. `docs: update README with comprehensive documentation and add design specification`
-7. `chore: add project configuration files and contributing guidelines`
-8. `docs: add example scripts for programmatic usage`
-9. `ci: add Makefile and GitHub Actions workflow for CI/CD`
+### Performance
+- **Parsing**: < 1s per paper
+- **Analysis**: ~3-5s per paper (thanks to Groq LPU)
+- **Cost**: Free tier (Beta)
 
-## Project Statistics
+---
 
-- **Total Files Created**: 20+
-- **Lines of Code**: ~2000+
-- **Test Coverage**: Ready for >80%
-- **Documentation Pages**: 5 (README, CONTRIBUTING, design_spec, examples, data)
+## 📊 Project Statistics
 
-## Architecture Highlights
+- **Version**: 0.3.0
+- **Primary Model**: Llama-3.3-70b-versatile
+- **Backend**: FastAPI
+- **Frontend**: Vanilla JS + CSS
+- **Documentation**: 100% updated for Groq migration
 
-### Modular Design
-- **Separation of Concerns**: Models, Ingestion, CLI are independent
-- **Extensibility**: Abstract parser allows easy addition of Grobid/Nougat
-- **Type Safety**: Full type hints and Pydantic validation
+---
 
-### Scientific Rigor
-- **Traceability**: Source file tracking in Paper model
-- **Versioning**: Parser version stored with each paper
-- **Reproducibility**: Deterministic parsing with clear error handling
-
-## Next Steps (Future Phases)
-
-### Phase 2: AI Processing
-- [ ] Integrate SPECTER2 embeddings
-- [ ] Set up Qdrant vector database
-- [ ] Implement semantic search
-- [ ] Add NER for scientific concepts
-
-### Phase 3: Knowledge Construction
-- [ ] Citation graph extraction
-- [ ] State-of-the-Art matrix generation
-- [ ] Gap analysis module
-- [ ] Visualization components
-
-### Phase 4: Advanced Features
-- [ ] Web UI (React/Next.js)
-- [ ] REST API (FastAPI)
-- [ ] Batch processing
-- [ ] Multi-language support
-
-## How to Use
-
-### Installation
-```bash
-poetry install
-```
-
-### Run Tests
-```bash
-make test
-# or
-poetry run pytest
-```
-
-### Ingest a Paper
-```bash
-python -m src.main ingest path/to/paper.pdf -v
-```
-
-### Format Code
-```bash
-make format
-```
-
-## Conclusion
-
-The MVP is **production-ready** for basic PDF ingestion and structured extraction. The codebase follows academic standards with:
-
-- ✅ Clean architecture
-- ✅ Comprehensive testing
-- ✅ Full documentation
-- ✅ CI/CD pipeline
-- ✅ Atomic git history
-
-**Status**: Ready for Phase 2 development or immediate use for paper collection and basic analysis.
+**Status**: Ready for academic use (single-paper analysis mode).
