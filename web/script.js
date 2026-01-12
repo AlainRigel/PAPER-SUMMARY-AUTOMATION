@@ -91,7 +91,7 @@ analyzeBtn.addEventListener('click', async () => {
         const formData = new FormData();
         formData.append('file', currentFile);
 
-        const response = await fetch('http://localhost:8000/api/upload', {
+        const response = await fetch('http://localhost:8000/api/analyze', {
             method: 'POST',
             body: formData
         });

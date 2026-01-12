@@ -104,13 +104,38 @@ class AcademicAnalyzer:
     """
     Analyzer that produces structured academic analysis from parsed papers.
     
-    This class will be extended to use LLMs for deep analysis in future phases.
-    For now, it provides a structured template and basic extraction.
+    Uses advanced NLP techniques including:
+    - Scientific Named Entity Recognition (NER)
+    - Discourse segmentation (rhetorical function classification)
+    - Key phrase extraction
+    - Semantic analysis
+    
+    Version 0.2.0: NLP-enhanced analysis
     """
     
-    def __init__(self):
-        """Initialize the academic analyzer."""
-        self.version = "0.1.0-template"
+    def __init__(self, use_nlp: bool = True):
+        """
+        Initialize the academic analyzer.
+        
+        Args:
+            use_nlp: Whether to use NLP processing (requires dependencies)
+        """
+        self.version = "0.2.0-nlp"
+        self.use_nlp = use_nlp
+        
+        # Initialize NLP processor if requested
+        if use_nlp:
+            try:
+                from .nlp_processor import NLPProcessor
+                self.nlp_processor = NLPProcessor()
+                print("✓ NLP processor initialized")
+            except Exception as e:
+                print(f"Warning: Could not initialize NLP processor: {e}")
+                print("Falling back to template-based analysis")
+                self.use_nlp = False
+                self.nlp_processor = None
+        else:
+            self.nlp_processor = None
     
     def analyze(self, paper: Paper) -> AcademicAnalysis:
         """
@@ -196,67 +221,280 @@ The proposed approach is described in the abstract and introduction sections. Fu
 [Template Note: This is a placeholder. LLM-based analysis will provide detailed technical summary.]"""
     
     def _extract_problem_statement(self, abstract: str, intro: str) -> str:
-        """Extract problem statement."""
-        if abstract:
+        """Extract problem statement using NLP."""
+        if not abstract:
+            return "Problem statement not explicitly identified in abstract."
+        
+        if not self.use_nlp or not self.nlp_processor:
             # Simple heuristic: first sentence often states the problem
             sentences = abstract.split('. ')
             if sentences:
                 return sentences[0] + "."
-        return "Problem statement not explicitly identified in abstract."
+            return "Problem statement not explicitly identified in abstract."
+        
+        # Process with NLP
+        text = f"{abstract} {intro[:500]}"  # Limit intro
+        nlp_result = self.nlp_processor.process(text, section_type="introduction")
+        
+        # Look for sentences with OBJECTIVE or BACKGROUND function
+        from .nlp_processor import RhetoricalFunction
+        for sent in nlp_result['discourse']:
+            if sent.function == RhetoricalFunction.OBJECTIVE:
+                return sent.text.strip()
+        
+        # Fallback to first sentence
+        sentences = abstract.split('. ')
+        return sentences[0] + "." if sentences else "Problem statement not found."
     
     def _extract_domain_relevance(self, abstract: str) -> str:
-        """Extract domain relevance."""
-        return "Domain relevance requires deeper semantic analysis (Phase 2)."
+        """Extract domain relevance using NLP."""
+        if not self.use_nlp or not self.nlp_processor:
+            return "Domain relevance requires deeper semantic analysis (Phase 2)."
+        
+        # Process abstract
+        nlp_result = self.nlp_processor.process(abstract)
+        
+        # Look for BACKGROUND sentences that explain relevance
+        from .nlp_processor import RhetoricalFunction
+        for sent in nlp_result['discourse']:
+            if sent.function == RhetoricalFunction.BACKGROUND:
+                if any(word in sent.text.lower() for word in ['important', 'critical', 'essential', 'significant', 'relevant']):
+                    return sent.text.strip()
+        
+        return "Domain relevance requires deeper semantic analysis."
     
     def _extract_constraints(self, methodology: str) -> list[str]:
-        """Extract constraints."""
+        """Extract constraints using NLP."""
         if not methodology:
             return ["Methodology section not found"]
-        return ["Constraints require LLM-based extraction (Phase 2)"]
+        
+        if not self.use_nlp or not self.nlp_processor:
+            return ["Constraints require LLM-based extraction (Phase 2)"]
+        
+        # Process methodology
+        nlp_result = self.nlp_processor.process(methodology, section_type="methodology")
+        
+        # Look for constraint-indicating sentences
+        constraints = []
+        constraint_keywords = ['constraint', 'assumption', 'limitation', 'require', 'must', 'limited to']
+        
+        for sent in nlp_result['discourse']:
+            if any(keyword in sent.text.lower() for keyword in constraint_keywords):
+                constraints.append(sent.text.strip())
+        
+        if not constraints:
+            return ["No explicit constraints stated"]
+        
+        return constraints[:5]
     
     def _extract_input_data(self, methodology: str) -> str:
-        """Extract input data description."""
+        """Extract input data description using NLP."""
         if not methodology:
             return "Not explicitly specified in the paper."
-        return "Input data description requires semantic analysis (Phase 2)."
+        
+        if not self.use_nlp or not self.nlp_processor:
+            return "Input data description requires semantic analysis (Phase 2)."
+        
+        # Process methodology
+        nlp_result = self.nlp_processor.process(methodology, section_type="methodology")
+        
+        # Look for MATERIAL entities (datasets)
+        from .nlp_processor import ScientificEntityType
+        materials = [e.text for e in nlp_result['entities'] if e.entity_type == ScientificEntityType.MATERIAL]
+        
+        if materials:
+            return f"Dataset(s): {', '.join(materials[:3])}"
+        
+        # Look for sentences mentioning data
+        data_keywords = ['data', 'dataset', 'corpus', 'input', 'samples']
+        for sent in nlp_result['discourse']:
+            if any(keyword in sent.text.lower() for keyword in data_keywords):
+                return sent.text.strip()
+        
+        return "Input data not explicitly specified."
     
     def _extract_techniques(self, methodology: str) -> list[str]:
-        """Extract techniques used."""
+        """Extract techniques used using NLP."""
         if not methodology:
             return ["Not explicitly specified in the paper."]
-        return ["Technique extraction requires LLM analysis (Phase 2)"]
+        
+        if not self.use_nlp or not self.nlp_processor:
+            return ["Technique extraction requires LLM analysis (Phase 2)"]
+        
+        # Process methodology
+        nlp_result = self.nlp_processor.process(methodology, section_type="methodology")
+        
+        # Extract METHOD entities
+        from .nlp_processor import ScientificEntityType
+        methods = [e.text for e in nlp_result['entities'] if e.entity_type == ScientificEntityType.METHOD]
+        
+        if methods:
+            # Deduplicate and limit
+            unique_methods = list(dict.fromkeys(methods))
+            return unique_methods[:5]
+        
+        return ["Techniques not explicitly identified"]
     
     def _extract_pipeline(self, methodology: str) -> str:
-        """Extract processing pipeline."""
+        """Extract processing pipeline using NLP."""
         if not methodology:
             return "Not explicitly specified in the paper."
-        return "Pipeline description requires semantic analysis (Phase 2)."
+        
+        if not self.use_nlp or not self.nlp_processor:
+            return "Pipeline description requires semantic analysis (Phase 2)."
+        
+        # Process methodology
+        nlp_result = self.nlp_processor.process(methodology, section_type="methodology")
+        
+        # Look for METHOD function sentences
+        from .nlp_processor import RhetoricalFunction
+        pipeline_sentences = []
+        for sent in nlp_result['discourse']:
+            if sent.function == RhetoricalFunction.METHOD:
+                pipeline_sentences.append(sent.text.strip())
+        
+        if pipeline_sentences:
+            # Combine first few sentences
+            return " ".join(pipeline_sentences[:3])
+        
+        return "Processing pipeline not explicitly described."
     
     def _extract_evaluation(self, methodology: str) -> str:
-        """Extract evaluation method."""
+        """Extract evaluation method using NLP."""
         if not methodology:
             return "Not explicitly specified in the paper."
-        return "Evaluation method requires semantic analysis (Phase 2)."
+        
+        if not self.use_nlp or not self.nlp_processor:
+            return "Evaluation method requires semantic analysis (Phase 2)."
+        
+        # Process methodology
+        nlp_result = self.nlp_processor.process(methodology, section_type="methodology")
+        
+        # Look for METRIC entities
+        from .nlp_processor import ScientificEntityType
+        metrics = [e.text for e in nlp_result['entities'] if e.entity_type == ScientificEntityType.METRIC]
+        
+        if metrics:
+            return f"Evaluation metrics: {', '.join(metrics[:5])}"
+        
+        # Look for evaluation keywords
+        eval_keywords = ['evaluate', 'evaluation', 'measure', 'metric', 'performance', 'accuracy']
+        for sent in nlp_result['discourse']:
+            if any(keyword in sent.text.lower() for keyword in eval_keywords):
+                return sent.text.strip()
+        
+        return "Evaluation method not explicitly specified."
     
     def _extract_contributions(self, abstract: str, conclusion: str) -> list[str]:
-        """Extract main contributions."""
-        return [
-            "Contribution extraction requires LLM-based analysis (Phase 2)",
-            "Template placeholder for structured contribution list"
-        ]
+        """Extract main contributions using NLP."""
+        if not self.use_nlp or not self.nlp_processor:
+            return [
+                "Contribution extraction requires LLM-based analysis (Phase 2)",
+                "Template placeholder for structured contribution list"
+            ]
+        
+        # Combine abstract and conclusion
+        text = f"{abstract} {conclusion}"
+        
+        # Process with NLP
+        nlp_result = self.nlp_processor.process(text)
+        
+        # Extract sentences with RESULT or CONCLUSION function
+        contributions = []
+        for sent in nlp_result['discourse']:
+            from .nlp_processor import RhetoricalFunction
+            if sent.function in [RhetoricalFunction.RESULT, RhetoricalFunction.CONCLUSION]:
+                # Look for contribution indicators
+                if any(word in sent.text.lower() for word in ['we', 'propose', 'present', 'introduce', 'develop', 'achieve']):
+                    contributions.append(sent.text.strip())
+        
+        # If no contributions found, extract from entities
+        if not contributions:
+            from .nlp_processor import ScientificEntityType
+            methods = [e.text for e in nlp_result['entities'] if e.entity_type == ScientificEntityType.METHOD]
+            if methods:
+                contributions.append(f"Proposed methodology: {', '.join(methods[:3])}")
+        
+        # Ensure we have at least 2 contributions
+        if len(contributions) < 2:
+            contributions.append("Additional contributions require deeper semantic analysis")
+        
+        return contributions[:5]  # Max 5
     
     def _extract_limitations(self, conclusion: str) -> list[str]:
-        """Extract limitations."""
+        """Extract limitations using NLP."""
         if not conclusion:
             return ["Conclusion section not found"]
-        return ["Limitation extraction requires semantic analysis (Phase 2)"]
+        
+        if not self.use_nlp or not self.nlp_processor:
+            return ["Limitation extraction requires semantic analysis (Phase 2)"]
+        
+        # Process with NLP
+        nlp_result = self.nlp_processor.process(conclusion)
+        
+        # Extract sentences with LIMITATION function
+        limitations = []
+        for sent in nlp_result['discourse']:
+            from .nlp_processor import RhetoricalFunction
+            if sent.function == RhetoricalFunction.LIMITATION:
+                limitations.append(sent.text.strip())
+        
+        # Also look for limitation keywords
+        limitation_keywords = ['limitation', 'constraint', 'challenge', 'drawback', 'however', 'unfortunately']
+        for sent in nlp_result['discourse']:
+            if any(keyword in sent.text.lower() for keyword in limitation_keywords):
+                if sent.text.strip() not in limitations:
+                    limitations.append(sent.text.strip())
+        
+        if not limitations:
+            return ["No explicit limitations stated in the paper"]
+        
+        return limitations[:5]  # Max 5
     
     def _extract_key_concepts(self, paper: Paper) -> dict[str, str]:
-        """Extract key concepts."""
-        # Simple heuristic: extract capitalized terms
-        return {
-            "Concept Extraction": "Requires NER and semantic analysis (Phase 2)"
-        }
+        """Extract key concepts using NLP."""
+        if not self.use_nlp or not self.nlp_processor:
+            return {
+                "Concept Extraction": "Requires NER and semantic analysis (Phase 2)"
+            }
+        
+        # Combine all text
+        text = f"{paper.title} {paper.abstract or ''}"
+        for section in paper.sections[:3]:  # First 3 sections
+            text += f" {section.content[:500]}"  # Limit per section
+        
+        # Process with NLP
+        nlp_result = self.nlp_processor.process(text)
+        
+        # Extract concepts from entities
+        concepts = {}
+        from .nlp_processor import ScientificEntityType
+        
+        # Group entities by type
+        entity_groups = {}
+        for entity in nlp_result['entities']:
+            if entity.entity_type not in entity_groups:
+                entity_groups[entity.entity_type] = []
+            entity_groups[entity.entity_type].append(entity)
+        
+        # Create concept definitions from most confident entities
+        for entity_type, entities in entity_groups.items():
+            # Sort by confidence
+            entities.sort(key=lambda e: e.confidence, reverse=True)
+            
+            # Take top entities
+            for entity in entities[:2]:  # Top 2 per type
+                # Use context as definition
+                definition = entity.context[:200] if entity.context else "Technical concept from the paper"
+                concepts[entity.text] = definition
+        
+        # Add key phrases as concepts
+        for phrase, score in nlp_result['key_phrases'][:5]:
+            if phrase not in concepts:
+                concepts[phrase.title()] = "Key technical phrase identified in the paper"
+        
+        # Limit to top 10 concepts
+        return dict(list(concepts.items())[:10])
     
     def _classify_thematically(self, title: str, abstract: str) -> list[str]:
         """Classify paper thematically."""
