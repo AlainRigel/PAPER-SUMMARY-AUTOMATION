@@ -91,7 +91,7 @@ analyzeBtn.addEventListener('click', async () => {
         const formData = new FormData();
         formData.append('file', currentFile);
 
-        const response = await fetch('http://localhost:8000/api/analyze', {
+        const response = await fetch('http://127.0.0.1:8000/api/analyze', {
             method: 'POST',
             body: formData
         });
@@ -101,10 +101,10 @@ analyzeBtn.addEventListener('click', async () => {
         }
 
         const data = await response.json();
-        currentPaper = data.paper;
+        currentPaper = data;  // Store complete data including analysis
 
         // Display results
-        displayResults(data.paper);
+        displayResults(data.paper, data.analysis);
 
         loadingSection.style.display = 'none';
         resultsSection.style.display = 'block';
@@ -118,7 +118,7 @@ analyzeBtn.addEventListener('click', async () => {
 });
 
 // ===== Display Results =====
-function displayResults(paper) {
+function displayResults(paper, analysis) {
     // Title and authors
     document.getElementById('paperTitle').textContent = paper.title || 'Untitled';
 
@@ -139,6 +139,11 @@ function displayResults(paper) {
         abstractSection.style.display = 'block';
     } else {
         abstractSection.style.display = 'none';
+    }
+
+    // ===== NLP ANALYSIS SECTION =====
+    if (analysis) {
+        displayAnalysis(analysis);
     }
 
     // Metadata
@@ -184,6 +189,145 @@ function displayResults(paper) {
     } else {
         sectionsList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: var(--spacing-md);">No sections detected</p>';
     }
+}
+
+// ===== Display NLP Analysis =====
+function displayAnalysis(analysis) {
+    // Create analysis section if it doesn't exist
+    let analysisSection = document.getElementById('analysisSection');
+    if (!analysisSection) {
+        analysisSection = document.createElement('div');
+        analysisSection.id = 'analysisSection';
+        analysisSection.className = 'card';
+        analysisSection.style.marginTop = 'var(--spacing-lg)';
+
+        // Insert after abstract section
+        const abstractSection = document.getElementById('abstractSection');
+        abstractSection.parentNode.insertBefore(analysisSection, abstractSection.nextSibling);
+    }
+
+    analysisSection.innerHTML = `
+        <h2 style="color: var(--primary); margin-bottom: var(--spacing-md);">
+            🧠 Análisis NLP Completo
+        </h2>
+
+        ${analysis.technical_summary ? `
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
+                📝 Resumen Técnico
+            </h3>
+            <p style="color: var(--text-secondary); line-height: 1.6; background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md);">
+                ${analysis.technical_summary}
+            </p>
+        </div>
+        ` : ''}
+
+        ${analysis.main_contributions && analysis.main_contributions.length > 0 ? `
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
+                🎯 Contribuciones Principales
+            </h3>
+            <ul style="list-style: none; padding: 0;">
+                ${analysis.main_contributions.map((contrib, i) => `
+                    <li style="padding: var(--spacing-sm); margin-bottom: var(--spacing-xs); background: var(--bg-secondary); border-left: 3px solid var(--success); border-radius: var(--radius-sm);">
+                        <strong style="color: var(--success);">${i + 1}.</strong> ${contrib}
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+        ` : ''}
+
+        ${analysis.key_concepts && Object.keys(analysis.key_concepts).length > 0 ? `
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
+                💡 Conceptos Clave
+            </h3>
+            <div style="display: grid; gap: var(--spacing-sm);">
+                ${Object.entries(analysis.key_concepts).slice(0, 10).map(([concept, definition]) => `
+                    <div style="padding: var(--spacing-sm); background: var(--bg-secondary); border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
+                        <strong style="color: var(--primary);">${concept}</strong>
+                        <p style="margin: var(--spacing-xs) 0 0 0; color: var(--text-muted); font-size: 0.9rem;">
+                            ${definition.substring(0, 150)}${definition.length > 150 ? '...' : ''}
+                        </p>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+
+        ${analysis.methodology ? `
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
+                ⚙️ Metodología
+            </h3>
+            <div style="background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md);">
+                ${analysis.methodology.input_data ? `
+                    <p style="margin-bottom: var(--spacing-sm);">
+                        <strong style="color: var(--primary);">Datos de Entrada:</strong> ${analysis.methodology.input_data}
+                    </p>
+                ` : ''}
+                ${analysis.methodology.techniques && analysis.methodology.techniques.length > 0 ? `
+                    <p style="margin-bottom: var(--spacing-sm);">
+                        <strong style="color: var(--primary);">Técnicas:</strong> ${analysis.methodology.techniques.join(', ')}
+                    </p>
+                ` : ''}
+                ${analysis.methodology.evaluation ? `
+                    <p style="margin-bottom: 0;">
+                        <strong style="color: var(--primary);">Evaluación:</strong> ${analysis.methodology.evaluation}
+                    </p>
+                ` : ''}
+            </div>
+        </div>
+        ` : ''}
+
+        ${analysis.limitations && analysis.limitations.length > 0 ? `
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
+                ⚠️ Limitaciones
+            </h3>
+            <ul style="list-style: none; padding: 0;">
+                ${analysis.limitations.map(limitation => `
+                    <li style="padding: var(--spacing-sm); margin-bottom: var(--spacing-xs); background: var(--bg-secondary); border-left: 3px solid var(--warning); border-radius: var(--radius-sm); color: var(--text-secondary);">
+                        ${limitation}
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+        ` : ''}
+
+        ${analysis.thematic_tags && analysis.thematic_tags.length > 0 ? `
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
+                🏷️ Tags Temáticos
+            </h3>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-xs);">
+                ${analysis.thematic_tags.map(tag => `
+                    <span style="padding: var(--spacing-xs) var(--spacing-sm); background: var(--primary); color: white; border-radius: var(--radius-full); font-size: 0.9rem;">
+                        ${tag}
+                    </span>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+
+        ${analysis.citation_summary ? `
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
+                📚 Resumen para Citar
+            </h3>
+            <p style="color: var(--text-secondary); line-height: 1.6; background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); font-style: italic;">
+                ${analysis.citation_summary}
+            </p>
+        </div>
+        ` : ''}
+
+        <div style="padding: var(--spacing-sm); background: var(--bg-secondary); border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--text-muted);">
+            <strong>Confianza del Análisis:</strong> ${analysis.analysis_confidence || 'N/A'}
+            ${analysis.missing_information && analysis.missing_information.length > 0 ? `
+                <br><strong>Información Faltante:</strong> ${analysis.missing_information.join(', ')}
+            ` : ''}
+        </div>
+    `;
 }
 
 // ===== Export JSON =====
@@ -290,7 +434,7 @@ document.head.appendChild(style);
 // ===== Check Server Health on Load =====
 window.addEventListener('load', async () => {
     try {
-        const response = await fetch('http://localhost:8000/api/health');
+        const response = await fetch('http://127.0.0.1:8000/api/health');
         if (response.ok) {
             console.log('✓ Server is running');
         }
