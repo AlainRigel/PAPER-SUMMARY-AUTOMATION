@@ -1,54 +1,50 @@
 """
-LLM Integration Module using DeepSeek API.
+LLM Integration Module using Groq API.
 
-This module provides LLM-powered analysis for scientific papers using DeepSeek,
-which offers high-quality analysis at a lower cost than other providers.
+Groq provides ultra-fast inference with models like Llama and Mixtral.
+Much faster than other providers while maintaining high quality.
 """
 
 import os
 from typing import Optional, Dict, Any
 import json
-from openai import OpenAI
-
-from src.models.paper import Paper
+from groq import Groq
 
 
-class DeepSeekAnalyzer:
+class GroqAnalyzer:
     """
-    Analyzer using DeepSeek LLM for intelligent paper analysis.
+    Analyzer using Groq LLM for intelligent paper analysis.
     
-    DeepSeek provides high-quality analysis with:
-    - Better understanding of scientific content
-    - More accurate extraction of contributions and limitations
-    - Contextual understanding of methodology
+    Groq provides:
+    - Ultra-fast inference (10x faster than typical LLMs)
+    - High-quality analysis with Llama 3 models
+    - Free tier with generous limits
     """
     
     def __init__(self, api_key: Optional[str] = None):
         """
-        Initialize DeepSeek analyzer.
+        Initialize Groq analyzer.
         
         Args:
-            api_key: DeepSeek API key (or set DEEPSEEK_API_KEY env var)
+            api_key: Groq API key (or set GROQ_API_KEY env var)
         """
-        self.api_key = api_key or os.getenv("DEEPSEEK_API_KEY")
+        self.api_key = api_key or os.getenv("GROQ_API_KEY")
         
         if not self.api_key:
             raise ValueError(
-                "DeepSeek API key required. Set DEEPSEEK_API_KEY environment variable "
+                "Groq API key required. Set GROQ_API_KEY environment variable "
                 "or pass api_key parameter."
             )
         
-        # Initialize OpenAI client with DeepSeek endpoint
-        self.client = OpenAI(
-            api_key=self.api_key,
-            base_url="https://api.deepseek.com"
-        )
+        # Initialize Groq client
+        self.client = Groq(api_key=self.api_key)
         
-        self.model = "deepseek-chat"  # DeepSeek's main model
+        # Use Llama 3.1 70B - best balance of speed and quality
+        self.model = "llama-3.1-70b-versatile"
     
-    def analyze_paper(self, paper: Paper) -> Dict[str, Any]:
+    def analyze_paper(self, paper) -> Dict[str, Any]:
         """
-        Perform comprehensive analysis of a paper using DeepSeek.
+        Perform comprehensive analysis of a paper using Groq.
         
         Args:
             paper: Parsed Paper object
@@ -62,7 +58,7 @@ class DeepSeekAnalyzer:
         # Create analysis prompt
         prompt = self._create_analysis_prompt(paper_content)
         
-        # Call DeepSeek API
+        # Call Groq API
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -89,10 +85,10 @@ class DeepSeekAnalyzer:
             return analysis
             
         except Exception as e:
-            print(f"Error calling DeepSeek API: {e}")
+            print(f"Error calling Groq API: {e}")
             return self._get_fallback_analysis()
     
-    def _prepare_content(self, paper: Paper) -> str:
+    def _prepare_content(self, paper) -> str:
         """Prepare paper content for LLM analysis."""
         content_parts = []
         
@@ -114,7 +110,7 @@ class DeepSeekAnalyzer:
         return "\n".join(content_parts)
     
     def _create_analysis_prompt(self, paper_content: str) -> str:
-        """Create the analysis prompt for DeepSeek."""
+        """Create the analysis prompt for Groq."""
         return f"""Analyze the following scientific paper and provide a comprehensive academic analysis.
 
 PAPER CONTENT:
@@ -192,16 +188,16 @@ Respond ONLY with the JSON object, no additional text."""
         }
 
 
-def analyze_with_deepseek(paper: Paper, api_key: Optional[str] = None) -> Dict[str, Any]:
+def analyze_with_groq(paper, api_key: Optional[str] = None) -> Dict[str, Any]:
     """
-    Convenience function to analyze a paper with DeepSeek.
+    Convenience function to analyze a paper with Groq.
     
     Args:
         paper: Parsed Paper object
-        api_key: Optional DeepSeek API key
+        api_key: Optional Groq API key
         
     Returns:
         Analysis dictionary
     """
-    analyzer = DeepSeekAnalyzer(api_key=api_key)
+    analyzer = GroqAnalyzer(api_key=api_key)
     return analyzer.analyze_paper(paper)

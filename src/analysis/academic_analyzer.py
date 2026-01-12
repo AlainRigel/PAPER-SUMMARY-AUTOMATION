@@ -129,15 +129,15 @@ class AcademicAnalyzer:
         # Initialize LLM analyzer if requested
         if use_llm:
             try:
-                from .llm_analyzer import DeepSeekAnalyzer
+                from .llm_analyzer import GroqAnalyzer
                 import os
                 
-                api_key = os.getenv("DEEPSEEK_API_KEY")
+                api_key = os.getenv("GROQ_API_KEY")
                 if api_key:
-                    self.llm_analyzer = DeepSeekAnalyzer(api_key=api_key)
-                    print("✓ DeepSeek LLM initialized")
+                    self.llm_analyzer = GroqAnalyzer(api_key=api_key)
+                    print("✓ Groq LLM initialized (Llama 3.1 70B)")
                 else:
-                    print("⚠ DEEPSEEK_API_KEY not found, LLM disabled")
+                    print("⚠ GROQ_API_KEY not found, LLM disabled")
                     self.use_llm = False
                     self.llm_analyzer = None
             except Exception as e:
@@ -161,12 +161,12 @@ class AcademicAnalyzer:
         else:
             self.nlp_processor = None if use_llm else None
     
-    def analyze(self, paper: Paper) -> AcademicAnalysis:
+    def analyze(self, paper) -> 'AcademicAnalysis':
         """
         Perform academic analysis on a parsed paper.
         
         Priority:
-        1. Use LLM (DeepSeek) if available - most accurate
+        1. Use LLM (Groq) if available - most accurate and fastest
         2. Fall back to NLP if LLM unavailable
         3. Fall back to templates if neither available
         
@@ -179,7 +179,7 @@ class AcademicAnalyzer:
         # Try LLM first (best quality)
         if self.use_llm and self.llm_analyzer:
             try:
-                print("🤖 Using DeepSeek LLM for analysis...")
+                print("🤖 Using Groq LLM for analysis...")
                 llm_result = self.llm_analyzer.analyze_paper(paper)
                 return self._build_analysis_from_llm(paper, llm_result)
             except Exception as e:
