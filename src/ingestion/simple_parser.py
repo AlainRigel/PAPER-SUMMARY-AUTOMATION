@@ -26,15 +26,15 @@ class SimplePDFParser(AbstractParser):
     This parser serves as a baseline and fallback option.
     """
 
-    # Common section headers in academic papers
+    # Common section headers in academic papers (improved patterns)
     SECTION_PATTERNS = {
-        SectionType.ABSTRACT: r"(?i)^abstract\s*$",
-        SectionType.INTRODUCTION: r"(?i)^(1\.?\s*)?introduction\s*$",
-        SectionType.METHODOLOGY: r"(?i)^(2\.?\s*)?(methodology|methods?)\s*$",
-        SectionType.RESULTS: r"(?i)^(3\.?\s*)?results?\s*$",
-        SectionType.DISCUSSION: r"(?i)^(4\.?\s*)?discussion\s*$",
-        SectionType.CONCLUSION: r"(?i)^(5\.?\s*)?(conclusion|conclusions)\s*$",
-        SectionType.REFERENCES: r"(?i)^references?\s*$",
+        SectionType.ABSTRACT: r"(?i)^(abstract|resumen)\s*$",
+        SectionType.INTRODUCTION: r"(?i)^(\d+\.?\s*)?(introduction|introducción|background)\s*$",
+        SectionType.METHODOLOGY: r"(?i)^(\d+\.?\s*)?(methodology|methods?|materials?\s+and\s+methods?|experimental\s+setup|approach)\s*$",
+        SectionType.RESULTS: r"(?i)^(\d+\.?\s*)?(results?|findings|experimental\s+results?)\s*$",
+        SectionType.DISCUSSION: r"(?i)^(\d+\.?\s*)?(discussion|analysis)\s*$",
+        SectionType.CONCLUSION: r"(?i)^(\d+\.?\s*)?(conclusion|conclusions|concluding\s+remarks|summary)\s*$",
+        SectionType.REFERENCES: r"(?i)^(references?|bibliography|works?\s+cited)\s*$",
     }
 
     def parse(self, pdf_path: Path) -> Paper:

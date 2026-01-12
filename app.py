@@ -116,8 +116,8 @@ async def analyze_paper(file: UploadFile = File(...)):
         parser = SimplePDFParser()
         paper = parser.parse(temp_file)
         
-        # Perform academic analysis with NLP
-        analyzer = AcademicAnalyzer(use_nlp=True)
+        # Perform academic analysis with LLM (DeepSeek) + NLP fallback
+        analyzer = AcademicAnalyzer(use_nlp=True, use_llm=True)
         analysis = analyzer.analyze(paper)
         
         # Convert to dicts for JSON response

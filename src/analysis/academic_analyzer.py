@@ -113,18 +113,42 @@ class AcademicAnalyzer:
     Version 0.2.0: NLP-enhanced analysis
     """
     
-    def __init__(self, use_nlp: bool = True):
+    
+    def __init__(self, use_nlp: bool = True, use_llm: bool = True):
         """
         Initialize the academic analyzer.
         
         Args:
             use_nlp: Whether to use NLP processing (requires dependencies)
+            use_llm: Whether to use LLM (DeepSeek) for analysis
         """
-        self.version = "0.2.0-nlp"
+        self.version = "0.3.0-llm"
         self.use_nlp = use_nlp
+        self.use_llm = use_llm
+        
+        # Initialize LLM analyzer if requested
+        if use_llm:
+            try:
+                from .llm_analyzer import DeepSeekAnalyzer
+                import os
+                
+                api_key = os.getenv("DEEPSEEK_API_KEY")
+                if api_key:
+                    self.llm_analyzer = DeepSeekAnalyzer(api_key=api_key)
+                    print("✓ DeepSeek LLM initialized")
+                else:
+                    print("⚠ DEEPSEEK_API_KEY not found, LLM disabled")
+                    self.use_llm = False
+                    self.llm_analyzer = None
+            except Exception as e:
+                print(f"Warning: Could not initialize LLM: {e}")
+                self.use_llm = False
+                self.llm_analyzer = None
+        else:
+            self.llm_analyzer = None
         
         # Initialize NLP processor if requested
-        if use_nlp:
+        if use_nlp and not use_llm:  # Only use NLP if LLM is not available
             try:
                 from .nlp_processor import NLPProcessor
                 self.nlp_processor = NLPProcessor()
@@ -135,22 +159,78 @@ class AcademicAnalyzer:
                 self.use_nlp = False
                 self.nlp_processor = None
         else:
-            self.nlp_processor = None
+            self.nlp_processor = None if use_llm else None
     
     def analyze(self, paper: Paper) -> AcademicAnalysis:
         """
         Perform academic analysis on a parsed paper.
+        
+        Priority:
+        1. Use LLM (DeepSeek) if available - most accurate
+        2. Fall back to NLP if LLM unavailable
+        3. Fall back to templates if neither available
         
         Args:
             paper: Parsed Paper object
             
         Returns:
             AcademicAnalysis object with structured analysis
-            
-        Note:
-            This is a template implementation. Full LLM-based analysis
-            will be implemented in Phase 2.
         """
+        # Try LLM first (best quality)
+        if self.use_llm and self.llm_analyzer:
+            try:
+                print("🤖 Using DeepSeek LLM for analysis...")
+                llm_result = self.llm_analyzer.analyze_paper(paper)
+                return self._build_analysis_from_llm(paper, llm_result)
+            except Exception as e:
+                print(f"⚠ LLM analysis failed: {e}")
+                print("Falling back to NLP analysis...")
+        
+        # Fall back to NLP (good quality)
+        if self.use_nlp and self.nlp_processor:
+            print("🧠 Using NLP for analysis...")
+            return self._build_analysis_from_nlp(paper)
+        
+        # Final fallback to templates (basic)
+        print("📝 Using template-based analysis...")
+        return self._build_analysis_from_templates(paper)
+    
+    def _build_analysis_from_llm(self, paper: Paper, llm_result: dict) -> AcademicAnalysis:
+        """Build AcademicAnalysis from LLM results."""
+        return AcademicAnalysis(
+            paper_title=paper.title,
+            paper_doi=paper.doi,
+            technical_summary=llm_result.get('technical_summary', ''),
+            research_problem=ResearchProblem(
+                problem_statement=llm_result.get('research_problem', {}).get('problem_statement', ''),
+                domain_relevance=llm_result.get('research_problem', {}).get('domain_relevance', ''),
+                constraints=llm_result.get('research_problem', {}).get('constraints', [])
+            ),
+            methodology=Methodology(
+                input_data=llm_result.get('methodology', {}).get('input_data', ''),
+                techniques=llm_result.get('methodology', {}).get('techniques', []),
+                pipeline=llm_result.get('methodology', {}).get('pipeline', ''),
+                evaluation=llm_result.get('methodology', {}).get('evaluation', '')
+            ),
+            main_contributions=llm_result.get('main_contributions', []),
+            limitations=llm_result.get('limitations', []),
+            key_concepts=llm_result.get('key_concepts', {}),
+            thematic_tags=llm_result.get('thematic_tags', []),
+            sota_positioning=llm_result.get('sota_positioning', ''),
+            citation_summary=llm_result.get('citation_summary', ''),
+            analysis_confidence=llm_result.get('analysis_confidence', 'high'),
+            missing_information=llm_result.get('missing_information', [])
+        )
+    
+    
+    def _build_analysis_from_nlp(self, paper: Paper) -> AcademicAnalysis:
+        """Build AcademicAnalysis from NLP processing."""
+        # This will use the NLP processor for enhanced extraction
+        # For now, delegate to template method
+        return self._build_analysis_from_templates(paper)
+    
+    def _build_analysis_from_templates(self, paper: Paper) -> AcademicAnalysis:
+        """Build AcademicAnalysis from template-based extraction."""
         # Extract basic information
         abstract = paper.abstract or "Abstract not available"
         
