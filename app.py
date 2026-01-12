@@ -116,8 +116,8 @@ async def analyze_paper(file: UploadFile = File(...)):
         parser = SimplePDFParser()
         paper = parser.parse(temp_file)
         
-        # Perform academic analysis
-        analyzer = AcademicAnalyzer()
+        # Perform academic analysis with NLP
+        analyzer = AcademicAnalyzer(use_nlp=True)
         analysis = analyzer.analyze(paper)
         
         # Convert to dicts for JSON response
