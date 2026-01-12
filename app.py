@@ -9,6 +9,10 @@ import json
 import tempfile
 import shutil
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
