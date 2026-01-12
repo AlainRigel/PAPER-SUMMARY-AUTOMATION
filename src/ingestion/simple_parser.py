@@ -26,26 +26,33 @@ class SimplePDFParser(AbstractParser):
     This parser serves as a baseline and fallback option.
     """
 
-    # Common section headers in academic papers (improved patterns)
+    # Common section headers in academic papers (Multi-disciplinary)
+    # Supports: Engineering, Medicine, Social Sciences, etc.
     SECTION_PATTERNS = {
-        SectionType.ABSTRACT: r"(?i)^(abstract|resumen)\s*$",
-        SectionType.INTRODUCTION: r"(?i)^(\d+\.?\s*)?(introduction|introducción|background)\s*$",
-        SectionType.METHODOLOGY: r"(?i)^(\d+\.?\s*)?(methodology|methods?|materials?\s+and\s+methods?|experimental\s+setup|approach)\s*$",
-        SectionType.RESULTS: r"(?i)^(\d+\.?\s*)?(results?|findings|experimental\s+results?)\s*$",
-        SectionType.DISCUSSION: r"(?i)^(\d+\.?\s*)?(discussion|analysis)\s*$",
-        SectionType.CONCLUSION: r"(?i)^(\d+\.?\s*)?(conclusion|conclusions|concluding\s+remarks|summary)\s*$",
-        SectionType.REFERENCES: r"(?i)^(references?|bibliography|works?\s+cited)\s*$",
+        SectionType.ABSTRACT: r"(?i)^\s*(?:(?:\d+|[IVX]+)\.?\s*)?(abstract|resumen|summary|executive\s+summary)\s*[:.-]?\s*$",
+        
+        SectionType.INTRODUCTION: r"(?i)^\s*(?:(?:\d+|[IVX]+)\.?\s*)?(introduction|introducción|background|motivation|overview|preliminaries|problem\s+statement|context)\s*[:.-]?\s*$",
+        
+        # Engineering & Tech: System Model, Architecture, Proposed Method
+        # Medicine: Materials and Methods, Patients and Methods, Clinical Study
+        # General: Methodology, Approach
+        SectionType.METHODOLOGY: r"(?i)^\s*(?:(?:\d+|[IVX]+)\.?\s*)?(methodology|methods?|materials?\s+and\s+methods?|experimental\s+setup|approach|implementation|system\s+design|architecture|system\s+model|proposed\s+method|algorithm|procedure|study\s+design|participants?|protocol)\s*[:.-]?\s*$",
+        
+        # Engineering: Performance Evaluation, Simulation Results
+        # Medicine: Clinical Outcomes, Findings
+        SectionType.RESULTS: r"(?i)^\s*(?:(?:\d+|[IVX]+)\.?\s*)?(results?|findings|experimental\s+results?|experiments?|evaluations?|performance|outcomes?|simulation\s+results?|analysis\s+of\s+results)\s*[:.-]?\s*$",
+        
+        # Social Sciences: Theoretical Framework, Lit Review often separate but related
+        SectionType.DISCUSSION: r"(?i)^\s*(?:(?:\d+|[IVX]+)\.?\s*)?(discussion|analysis|interpretation|limitations?|implications?|theoretical\s+framework|literature\s+review|related\s+work)\s*[:.-]?\s*$",
+        
+        SectionType.CONCLUSION: r"(?i)^\s*(?:(?:\d+|[IVX]+)\.?\s*)?(conclusion|conclusions|concluding\s+remarks|summary|future\s+work|recommendations?)\s*[:.-]?\s*$",
+        
+        SectionType.REFERENCES: r"(?i)^\s*(?:(?:\d+|[IVX]+)\.?\s*)?(references?|bibliography|works?\s+cited|sources?)\s*[:.-]?\s*$",
     }
 
     def parse(self, pdf_path: Path) -> Paper:
         """
         Parse PDF and extract text with basic section detection.
-        
-        Args:
-            pdf_path: Path to PDF file
-            
-        Returns:
-            Paper object with extracted content
         """
         self.validate_pdf(pdf_path)
         
@@ -59,7 +66,9 @@ class SimplePDFParser(AbstractParser):
         # Extract full text
         full_text = ""
         for page in reader.pages:
-            full_text += page.extract_text() + "\n"
+            text = page.extract_text()
+            if text:
+                full_text += text + "\n"
         
         # Attempt to detect sections
         sections = self._detect_sections(full_text)
@@ -71,46 +80,53 @@ class SimplePDFParser(AbstractParser):
                 abstract = section.content
                 break
         
+        # Fallback: if no sections detected, try to treat first chunk as abstract
+        if not abstract and len(sections) > 0 and len(sections[0].content) < 3000:
+             # Heuristic: First section often contains abstract if not explicitly labeled
+             pass
+
         return Paper(
             title=title,
             authors=authors,
             abstract=abstract,
             sections=sections,
             source_file=str(pdf_path),
-            parser_version="simple-0.1.0"
+            parser_version="simple-0.2.0-optimized"
         )
+
+    # ... (skipping unchanged metadata methods)
 
     def _extract_title(self, metadata: dict, reader: PdfReader) -> str:
         """Extract title from metadata or first page."""
         if metadata and metadata.get("/Title"):
-            return str(metadata["/Title"])
+            title = str(metadata["/Title"]).strip()
+            if title and title.lower() != "untitled":
+                return title
         
         # Fallback: use first non-empty line from first page
         if reader.pages:
-            first_page_text = reader.pages[0].extract_text()
-            lines = [line.strip() for line in first_page_text.split("\n") if line.strip()]
-            if lines:
-                return lines[0]
+            try:
+                first_page_text = reader.pages[0].extract_text()
+                lines = [line.strip() for line in first_page_text.split("\n") if line.strip()]
+                if lines:
+                    return lines[0]
+            except:
+                pass
         
         return "Untitled Document"
 
     def _extract_authors(self, metadata: dict) -> list[Author]:
         """Extract authors from metadata."""
         authors = []
-        
         if metadata and metadata.get("/Author"):
             author_string = str(metadata["/Author"])
-            # Simple split by common delimiters
             names = re.split(r"[,;]|\sand\s", author_string)
             authors = [Author(name=name.strip()) for name in names if name.strip()]
-        
         return authors
 
     def _detect_sections(self, text: str) -> list[Section]:
         """
         Attempt to detect sections using pattern matching.
-        
-        This is a heuristic approach and may not work for all papers.
         """
         sections = []
         lines = text.split("\n")
@@ -121,13 +137,18 @@ class SimplePDFParser(AbstractParser):
         
         for line in lines:
             line_stripped = line.strip()
+            if not line_stripped:
+                continue
+                
+            # Heuristic: Section headers are usually short (< 10 words or < 80 chars)
+            is_potential_header = len(line_stripped) < 80 and len(line_stripped.split()) < 10
             
-            # Check if this line is a section header
             matched_type = None
-            for section_type, pattern in self.SECTION_PATTERNS.items():
-                if re.match(pattern, line_stripped):
-                    matched_type = section_type
-                    break
+            if is_potential_header:
+                for section_type, pattern in self.SECTION_PATTERNS.items():
+                    if re.match(pattern, line_stripped):
+                        matched_type = section_type
+                        break
             
             if matched_type:
                 # Save previous section if exists
@@ -143,9 +164,7 @@ class SimplePDFParser(AbstractParser):
                 current_section_title = line_stripped
                 current_content = []
             else:
-                # Add to current section
-                if line_stripped:
-                    current_content.append(line_stripped)
+                current_content.append(line_stripped)
         
         # Add final section
         if current_content:

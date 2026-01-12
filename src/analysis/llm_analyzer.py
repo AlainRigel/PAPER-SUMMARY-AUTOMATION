@@ -39,8 +39,8 @@ class GroqAnalyzer:
         # Initialize Groq client
         self.client = Groq(api_key=self.api_key)
         
-        # Use Llama 3.1 70B - best balance of speed and quality
-        self.model = "llama-3.1-70b-versatile"
+        # Use Llama 3.3 70B - latest stable endpoint
+        self.model = "llama-3.3-70b-versatile"
     
     def analyze_paper(self, paper) -> Dict[str, Any]:
         """
@@ -176,7 +176,8 @@ Respond ONLY with the JSON object, no additional text."""
                 "evaluation": "Unable to extract with LLM"
             },
             "main_contributions": [
-                "LLM analysis failed - please check API key and connection"
+                "LLM analysis failed - please check API key and connection",
+                "See server logs for detailed error message"
             ],
             "limitations": [],
             "key_concepts": {},
